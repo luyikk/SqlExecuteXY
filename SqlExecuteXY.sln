@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlExecuteXY", "SqlExecuteXY.csproj", "{CACB7611-E465-42F6-8FDF-BDC1A6460383}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		NET2|Any CPU = NET2|Any CPU
+		NET45|Any CPU = NET45|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.NET2|Any CPU.ActiveCfg = NET2|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.NET2|Any CPU.Build.0 = NET2|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.NET45|Any CPU.ActiveCfg = NET45|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.NET45|Any CPU.Build.0 = NET45|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CACB7611-E465-42F6-8FDF-BDC1A6460383}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -10,9 +10,7 @@ namespace SqlXY
     {
         protected List<T> Deserializer<T>(IDbCommand Command) where T : new()
         {
-            List<T> ObjList = new List<T>();
-
-            Type objType = typeof(T);
+           
 
             using (var dataRead = Command.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult))
             {
@@ -20,9 +18,14 @@ namespace SqlXY
 #if NET45
               var func= DeserializerManager.GetInstance().GetFuncForType<T>(dataRead);
 
-               ObjList = func(dataRead);
+              return func(dataRead);
 
 #else
+
+                List<T> ObjList = new List<T>();
+
+                Type objType = typeof(T);
+
                 List<string> names = new List<string>(dataRead.FieldCount);
 
                 for (int i = 0; i < dataRead.FieldCount; i++)
@@ -59,11 +62,13 @@ namespace SqlXY
 
                 dataRead.Close();
 
+                return ObjList;
+
 #endif
 
             }
 
-            return ObjList;
+          
         }
     }
 }

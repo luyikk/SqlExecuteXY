@@ -54,8 +54,7 @@ namespace SqlXY
             Type readType = typeof(IDataReader);
             Type DR = typeof(IDataRecord);
 
-            MethodInfo DRTO = typeof(DeserializerManager).GetMethod(nameof(ReadDataForDBR));
-
+    
             var dm = new DynamicMethod("Deserialize" + Guid.NewGuid().ToString(), returnType, new[] { typeof(IDataReader) }, type, true);
             var il = dm.GetILGenerator();
 
@@ -128,11 +127,7 @@ namespace SqlXY
                 il.Emit(OpCodes.Ldstr, item.Name);
                 il.Emit(OpCodes.Call, typeof(String).GetMethod("op_Equality"));
                 il.Emit(OpCodes.Brfalse_S, proplable[ii]);
-
-                //il.Emit(OpCodes.Ldarg_0);
-                //il.Emit(OpCodes.Ldloc_3);
-                //il.Emit(OpCodes.Call, DRTO);
-
+         
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldloc_3);
                 il.Emit(OpCodes.Callvirt, DR.GetMethod("get_Item", new Type[] { typeof(int) }));
@@ -273,18 +268,6 @@ namespace SqlXY
                 }
             }
         }
-
-        public static object ReadDataForDBR(IDataReader read, int numb)
-        {
-
-            var obj = read[numb];
-            if (!(obj is DBNull))
-                return obj;
-            else
-                return null;
-
-        }
-
 
 
         static MethodInfo GetOperator(Type from, Type to)

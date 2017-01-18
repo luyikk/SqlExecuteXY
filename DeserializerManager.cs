@@ -47,14 +47,11 @@ namespace SqlXY
             }
         }
 
-
-
         public static Func<IDataReader, List<T>> GetTypeDeserializerImpl<T>(IDataReader read) where T : new()
         {
             Type type = typeof(T);
             Type returnType = typeof(List<T>);
             Type readType = typeof(IDataReader);
-            Type namedictType = typeof(Dictionary<string, int>);
             Type DR = typeof(IDataRecord);
 
             MethodInfo DRTO = typeof(DeserializerManager).GetMethod(nameof(ReadDataForDBR));
@@ -82,12 +79,10 @@ namespace SqlXY
 
             il.DeclareLocal(returnType); //list<t> return
             il.DeclareLocal(type);
-            il.DeclareLocal(typeof(bool)); //read?
+            il.DeclareLocal(typeof(object)); //read?
             il.DeclareLocal(typeof(int));
-            il.DeclareLocal(namedictType); //names
             il.DeclareLocal(typeof(int));
-            il.DeclareLocal(typeof(object)); //6
-            il.DeclareLocal(returnType);
+            il.DeclareLocal(typeof(string));
 
             il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Newobj, returnType.GetConstructor(new Type[] { }));
@@ -95,38 +90,11 @@ namespace SqlXY
 
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Callvirt, DR.GetProperty(nameof(read.FieldCount)).GetMethod);
-            il.Emit(OpCodes.Stloc_3);
-            il.Emit(OpCodes.Ldloc_3);
-            il.Emit(OpCodes.Brfalse, endref);
-            il.Emit(OpCodes.Ldloc_3);
-            il.Emit(OpCodes.Newobj, namedictType.GetConstructor(new Type[] { typeof(Int32) }));
             il.Emit(OpCodes.Stloc_S, 4);
-            il.Emit(OpCodes.Ldc_I4_0);
-            il.Emit(OpCodes.Stloc_S, 5);
-
-
-
-            ////////for (int i = 0; i < read.FieldCount; i++)
-            ////////{
-            ////////    names.Add(read.GetName(i), i);
-            ////////}
-
-            il.MarkLabel(fornames);//-------------------------------
-            il.Emit(OpCodes.Nop);
             il.Emit(OpCodes.Ldloc_S, 4);
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldloc_S, 5);
-            il.Emit(OpCodes.Callvirt, DR.GetMethod(nameof(read.GetName)));
-            il.Emit(OpCodes.Ldloc_S, 5);
-            il.Emit(OpCodes.Callvirt, namedictType.GetMethod(nameof(Dictionary<string, int>.Add)));
-            il.Emit(OpCodes.Ldloc_S, 5);
-            il.Emit(OpCodes.Ldc_I4_1);
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Stloc_S, 5);
-            il.Emit(OpCodes.Ldloc_S, 5);
-            il.Emit(OpCodes.Ldloc_3);
-            il.Emit(OpCodes.Clt);
-            il.Emit(OpCodes.Brtrue_S, fornames);
+            il.Emit(OpCodes.Brfalse, endref);
+
+
 
 
             ////while (read.Read())
@@ -135,51 +103,77 @@ namespace SqlXY
             il.MarkLabel(next);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Callvirt, readType.GetMethod(nameof(read.Read)));
-            il.Emit(OpCodes.Stloc_2);
-            il.Emit(OpCodes.Ldloc_2);
             il.Emit(OpCodes.Brfalse, endref);
             il.Emit(OpCodes.Newobj, type.GetConstructor(new Type[] { }));
             il.Emit(OpCodes.Stloc_1);
 
 
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Stloc_3);
+
+            var fori = il.DefineLabel();
+            il.MarkLabel(fori);
+
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Callvirt, DR.GetMethod(nameof(read.GetName)));
+            il.Emit(OpCodes.Stloc_S, 5);
 
             int ii = 0;
 
             foreach (var item in props)
             {
 
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldloc_S, 4);
+                il.Emit(OpCodes.Ldloc_S, 5);
                 il.Emit(OpCodes.Ldstr, item.Name);
-                il.Emit(OpCodes.Call, DRTO);
-                il.Emit(OpCodes.Stloc_S, 6);
-                il.Emit(OpCodes.Ldloc_S, 6);
+                il.Emit(OpCodes.Call, typeof(String).GetMethod("op_Equality"));
+                il.Emit(OpCodes.Brfalse_S, proplable[ii]);
+
+                //il.Emit(OpCodes.Ldarg_0);
+                //il.Emit(OpCodes.Ldloc_3);
+                //il.Emit(OpCodes.Call, DRTO);
+
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldloc_3);
+                il.Emit(OpCodes.Callvirt, DR.GetMethod("get_Item", new Type[] { typeof(int) }));
+                il.Emit(OpCodes.Stloc_2);
+                il.Emit(OpCodes.Ldloc_2);
+                il.Emit(OpCodes.Isinst, typeof(DBNull));
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Cgt_Un);
+                il.Emit(OpCodes.Brtrue_S, proplable[ii]);
+                il.Emit(OpCodes.Ldloc_2);
                 il.Emit(OpCodes.Brfalse_S, proplable[ii]);
 
                 if (item.PropertyType == typeof(string))
                 {
                     il.Emit(OpCodes.Ldloc_1);
-                    il.Emit(OpCodes.Ldloc_S, 6);
+                    il.Emit(OpCodes.Ldloc_2);
                     il.Emit(OpCodes.Castclass, typeof(string));
                     il.Emit(OpCodes.Callvirt, item.SetMethod);
                 }
                 else
                 {
                     il.Emit(OpCodes.Ldloc_1);
-                    il.Emit(OpCodes.Ldloc_S, 6);
+                    il.Emit(OpCodes.Ldloc_2);                  
                     FlexibleConvertBoxedFromHeadOfStack(il, typeof(object), item.PropertyType, null);
                     il.Emit(OpCodes.Callvirt, item.SetMethod);
                 }
 
-                il.Emit(OpCodes.Nop);
+
                 il.MarkLabel(proplable[ii]);
                 ii++;
 
-
-                // il.Emit(OpCodes.Pop);
-
-                //il.Emit(OpCodes.Pop);
             }
+
+            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Ldc_I4_1);
+            il.Emit(OpCodes.Add);
+            il.Emit(OpCodes.Stloc_3);
+            il.Emit(OpCodes.Ldloc_3);
+            il.Emit(OpCodes.Ldloc_S, 4);
+            il.Emit(OpCodes.Clt);
+            il.Emit(OpCodes.Brtrue, fori);
 
 
 
@@ -197,7 +191,6 @@ namespace SqlXY
             var funcType = System.Linq.Expressions.Expression.GetFuncType(typeof(IDataReader), returnType);
             return (Func<IDataReader, List<T>>)dm.CreateDelegate(funcType);
         }
-
 
         private static void FlexibleConvertBoxedFromHeadOfStack(ILGenerator il, Type from, Type to, Type via)
         {
@@ -281,17 +274,15 @@ namespace SqlXY
             }
         }
 
-        public static object ReadDataForDBR(IDataReader read, Dictionary<string, int> names, string key)
+        public static object ReadDataForDBR(IDataReader read, int numb)
         {
-            int numb;
-            if (names.TryGetValue(key, out numb))
-            {
 
-                var obj = read[numb];
-                if (!(obj is DBNull))
-                    return obj;
-            }
-            return null;
+            var obj = read[numb];
+            if (!(obj is DBNull))
+                return obj;
+            else
+                return null;
+
         }
 
 

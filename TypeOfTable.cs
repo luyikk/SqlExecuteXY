@@ -1,74 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Reflection;
-
+using System.Threading;
 #if USEConcurrent
 using System.Collections.Concurrent;
+
 #endif
 
 namespace SqlXY
 {
-    public  class TypeOfCacheManager
+    public class TypeOfCacheManager
     {
-
         #region 全局静态唯一对象
-        static object lockthis = new object();
 
-        static TypeOfCacheManager _My;
+        private static readonly object Lockthis = new object();
+
+        private static TypeOfCacheManager _my;
 
         public static TypeOfCacheManager GetInstance()
         {
-            lock (lockthis)
+            lock (Lockthis)
             {
-
-
-                if (_My == null)
-                    _My = new TypeOfCacheManager();
+                if (_my == null)
+                    _my = new TypeOfCacheManager();
             }
 
-            return _My;
+            return _my;
         }
+
         private TypeOfCacheManager()
         {
-
         }
 
         #endregion
 
-
-
-
 #if USEConcurrent
-        public ConcurrentDictionary<Type, Dictionary<string, System.Reflection.PropertyInfo>> PropertyTable = new ConcurrentDictionary<Type, Dictionary<string, System.Reflection.PropertyInfo>>();
+        public ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> PropertyTable =
+            new ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>>();
 #else
         object lockobj = new object();
         public  Dictionary<Type, Dictionary<string, System.Reflection.PropertyInfo>> PropertyTable = new Dictionary<Type, Dictionary<string, System.Reflection.PropertyInfo>>();
 #endif
 
 #if USEConcurrent
-        public Dictionary<string, System.Reflection.PropertyInfo> GetTypeProperty(Type type)
+        public Dictionary<string, PropertyInfo> GetTypeProperty(Type type)
         {
-
             if (PropertyTable.ContainsKey(type))
-            {
                 return PropertyTable[type];
-            }
-            else
-            {
-                System.Reflection.PropertyInfo[] propertyArray = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            var propertyArray = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-                Dictionary<string, System.Reflection.PropertyInfo> tmp = new Dictionary<string, System.Reflection.PropertyInfo>(propertyArray.Length);
+            var tmp = new Dictionary<string, PropertyInfo>(propertyArray.Length);
 
-                foreach (var item in propertyArray)
-                {
-                    tmp[item.Name] = item;
-                }
+            foreach (var item in propertyArray)
+                tmp[item.Name] = item;
 
-                System.Threading.SpinWait.SpinUntil(() => PropertyTable.TryAdd(type, tmp));
-                return tmp;
-            }
-
+            SpinWait.SpinUntil(() => PropertyTable.TryAdd(type, tmp));
+            return tmp;
         }
 
 #else

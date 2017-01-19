@@ -1,28 +1,24 @@
 ﻿//#define USEConcurrent//lockStack//USEConcurrent //lockStack or USEConcurrent of ...
 
 //by luyikk 2010.5.9
-using System;
-using System.Collections.Generic;
-using System.Text;
 
+using System;
+using System.Reflection;
 #if USEConcurrent
 using System.Collections.Concurrent;
-#endif
 
+#endif
 
 namespace SqlXY
 {
-
-    
     /// <summary>
-    /// 泛型的对象池-可输入构造函数,以及参数
+    ///     泛型的对象池-可输入构造函数,以及参数
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ObjectPool<T> where T : new()
     {
-
         /// <summary>
-        /// 对象处理代理
+        ///     对象处理代理
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="pool"></param>
@@ -30,30 +26,30 @@ namespace SqlXY
         public delegate T ObjectRunTimeHandle(T obj, ObjectPool<T> pool);
 
         /// <summary>
-        /// 获取对象时所处理的方法
+        ///     获取对象时所处理的方法
         /// </summary>
         public ObjectRunTimeHandle GetObjectRunTime { get; set; }
 
         /// <summary>
-        /// 回收对象时处理的方法
+        ///     回收对象时处理的方法
         /// </summary>
         public ObjectRunTimeHandle ReleaseObjectRunTime { get; set; }
 
         /// <summary>
-        /// 最大对象数量
+        ///     最大对象数量
         /// </summary>
         public int MaxObjectCount { get; set; }
 
 #if USEConcurrent
         /// <summary>
-        /// 对象存储Stack
+        ///     对象存储Stack
         /// </summary>
         public ConcurrentStack<T> ObjectStack { get; set; }
 #else
 
-        /// <summary>
-        /// 对象存储Stack
-        /// </summary>
+/// <summary>
+/// 对象存储Stack
+/// </summary>
         public Stack<T> ObjectStack { get; set; }
 
 #if  lockStack==true
@@ -63,14 +59,14 @@ namespace SqlXY
 #endif
 
         /// <summary>
-        /// 构造函数
+        ///     构造函数
         /// </summary>
-        public System.Reflection.ConstructorInfo TheConstructor { get; set; }
+        public ConstructorInfo TheConstructor { get; set; }
 
         /// <summary>
-        /// 参数
+        ///     参数
         /// </summary>
-        public object[] param { get; set; }
+        public object[] Param { get; set; }
 
         public ObjectPool(int maxObjectCount)
         {
@@ -82,52 +78,49 @@ namespace SqlXY
             lockStack = new object();
 #endif
 #endif
-            this.MaxObjectCount = maxObjectCount;
+            MaxObjectCount = maxObjectCount;
         }
 
         private T GetT()
         {
             if (TheConstructor != null)
-            {
-                return (T)TheConstructor.Invoke(param);
-            }
-            else
-            {
-                return new T();
-            }
+                return (T) TheConstructor.Invoke(Param);
+            return new T();
         }
 
 
         /// <summary>
-        /// 对象正常创建次数 i1+i2=i3
+        ///     对象正常创建次数 i1+i2=i3
         /// </summary>
-       public int i1 { get; set; }
-        /// <summary>
-       /// 对象从堆栈分配次数 i1+i2=i3
-        /// </summary>
-       public int i2 { get; set; }
-        /// <summary>
-        /// 对象回收次数 i1+i2=i3
-        /// </summary>
-       public int i3 { get; set; }
+        public int I1 { get; set; }
 
         /// <summary>
-        /// 获取对象
+        ///     对象从堆栈分配次数 i1+i2=i3
+        /// </summary>
+        public int I2 { get; set; }
+
+        /// <summary>
+        ///     对象回收次数 i1+i2=i3
+        /// </summary>
+        public int I3 { get; set; }
+
+        /// <summary>
+        ///     获取对象
         /// </summary>
         /// <returns></returns>
         public T GetObject()
         {
             if (ObjectStack.Count == 0)
             {
-                T p = GetT();
+                var p = GetT();
                 if (GetObjectRunTime != null)
                     p = GetObjectRunTime(p, this);
-                i1++;
+                I1++;
                 return p;
             }
             else
             {
- #if USEConcurrent
+#if USEConcurrent
 
                 T p;
 
@@ -136,19 +129,16 @@ namespace SqlXY
                     if (GetObjectRunTime != null)
                         p = GetObjectRunTime(p, this);
 
-                    i2++;
+                    I2++;
 
                     return p;
                 }
-                else
-                {
-                    p = GetT();
+                p = GetT();
 
-                    if (GetObjectRunTime != null)
-                        p = GetObjectRunTime(p, this);
+                if (GetObjectRunTime != null)
+                    p = GetObjectRunTime(p, this);
 
-                    return p;
-                }
+                return p;
 
 #else
                 T p;
@@ -189,25 +179,21 @@ namespace SqlXY
 #endif
 
 #endif
-
             }
-
         }
 
         /// <summary>
-        /// 获取对象
+        ///     获取对象
         /// </summary>
         /// <param name="cout"></param>
         /// <returns></returns>
         public T[] GetObject(int cout)
         {
-
-
             if (ObjectStack.Count == 0)
             {
-                T[] p = new T[cout];
+                var p = new T[cout];
 
-                for (int i = 0; i < cout; i++)
+                for (var i = 0; i < cout; i++)
                 {
                     p[i] = GetT();
                     if (GetObjectRunTime != null)
@@ -220,37 +206,26 @@ namespace SqlXY
             {
 #if USEConcurrent
 
-                T[] p = new T[cout];
+                var p = new T[cout];
 
-                int Lpcout = ObjectStack.TryPopRange(p);
-                               
+                var lpcout = ObjectStack.TryPopRange(p);
 
-                if (Lpcout < cout)
+
+                if (lpcout < cout)
                 {
-                    int x = cout - Lpcout;
+                    var x = cout - lpcout;
 
-                    T[] xp = new T[x];
+                    var xp = new T[x];
 
-                    for (int i = 0; i < x; i++)
-                    {
+                    for (var i = 0; i < x; i++)
                         xp[i] = GetT();
-                    }
 
-                    Array.Copy(xp, 0, p, Lpcout, x);
-
-
-
+                    Array.Copy(xp, 0, p, lpcout, x);
                 }
 
                 if (GetObjectRunTime != null)
-                {
-                    for (int i = 0; i < p.Length; i++)
-                    {
+                    for (var i = 0; i < p.Length; i++)
                         p[i] = GetObjectRunTime(p[i], this);
-
-                    }
-
-                }
 
 
                 return p;
@@ -290,22 +265,20 @@ namespace SqlXY
 
 #endif
             }
-
         }
 
 
         /// <summary>
-        /// 回收对象
+        ///     回收对象
         /// </summary>
         /// <param name="obj"></param>
         public void ReleaseObject(T obj)
         {
-
             if (ReleaseObjectRunTime != null)
             {
                 obj = ReleaseObjectRunTime(obj, this);
 
-                if (obj == null) 
+                if (obj == null)
                     return;
             }
 #if lockStack==true
@@ -313,41 +286,31 @@ namespace SqlXY
             {
 #endif
 
-                if (ObjectStack.Count >= MaxObjectCount)
-                {
-                    if (obj is IDisposable)
-                    {
-                        ((IDisposable)obj).Dispose();
-                    }
-
-                }
-                else
-                {
-                    i3++;
-                    ObjectStack.Push(obj);
-                }
+            if (ObjectStack.Count >= MaxObjectCount)
+            {
+                if (obj is IDisposable)
+                    ((IDisposable) obj).Dispose();
+            }
+            else
+            {
+                I3++;
+                ObjectStack.Push(obj);
+            }
 
 
 #if lockStack==true
             }
 #endif
-
         }
 
         /// <summary>
-        /// 回收对象
+        ///     回收对象
         /// </summary>
         /// <param name="obj"></param>
         public void ReleaseObject(T[] obj)
         {
-            foreach (T p in obj)
-            {
+            foreach (var p in obj)
                 ReleaseObject(p);
-            }
-
         }
-
-
-
     }
 }

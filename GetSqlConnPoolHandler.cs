@@ -137,7 +137,7 @@ namespace SqlXY
 
                                 temp.TheConstructor = typeof(SqlConnection).GetConstructor(new Type[] { typeof(string) });
 
-                                temp.param = new object[] { connectionstring };
+                                temp.Param = new object[] { connectionstring };
 
                                 temp.GetObjectRunTime = new ObjectPool<SqlConnection>.ObjectRunTimeHandle((conn, pool) =>
                                 {
@@ -219,7 +219,7 @@ namespace SqlXY
 
                                 temp.TheConstructor = typeof(System.Data.Odbc.OdbcConnection).GetConstructor(new Type[] { typeof(string) });
 
-                                temp.param = new object[] { connectionstring };
+                                temp.Param = new object[] { connectionstring };
 
                                 temp.GetObjectRunTime = new ObjectPool<System.Data.Odbc.OdbcConnection>.ObjectRunTimeHandle((conn, pool) =>
                                 {
@@ -337,7 +337,7 @@ namespace SqlXY
 
                                 temp.TheConstructor = typeof(System.Data.OleDb.OleDbConnection).GetConstructor(new Type[] { typeof(string) });
 
-                                temp.param = new object[] { connectionstring };
+                                temp.Param = new object[] { connectionstring };
 
                                 temp.GetObjectRunTime = new ObjectPool<System.Data.OleDb.OleDbConnection>.ObjectRunTimeHandle((conn, pool) =>
                                 {
@@ -455,7 +455,7 @@ namespace SqlXY
 
                                 temp.TheConstructor = typeof(MySql.Data.MySqlClient.MySqlConnection).GetConstructor(new Type[] { typeof(string) });
 
-                                temp.param = new object[] { connectionstring };
+                                temp.Param = new object[] { connectionstring };
 
                                 temp.GetObjectRunTime = new ObjectPool<MySql.Data.MySqlClient.MySqlConnection>.ObjectRunTimeHandle((conn, pool) =>
                                 {
@@ -575,7 +575,7 @@ namespace SqlXY
 
                                 temp.TheConstructor = typeof(NpgsqlConnection).GetConstructor(new Type[] { typeof(string) });
 
-                                temp.param = new object[] { connectionstring };
+                                temp.Param = new object[] { connectionstring };
 
                                 temp.GetObjectRunTime = new ObjectPool<NpgsqlConnection>.ObjectRunTimeHandle((conn, pool) =>
                                 {

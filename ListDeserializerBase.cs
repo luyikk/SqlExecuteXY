@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 
 namespace SqlXY
 {
     public abstract class ListDeserializerBase
     {
-        protected List<T> Deserializer<T>(IDbCommand Command) where T : new()
+        protected List<T> Deserializer<T>(IDbCommand command) where T : new()
         {
-           
-
-            using (var dataRead = Command.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult))
+            using (var dataRead = command.ExecuteReader(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult)
+            )
             {
-
 #if NET45
               var func= DeserializerManager.GetInstance().GetFuncForType<T>(dataRead);
 
@@ -22,53 +19,43 @@ namespace SqlXY
 
 #else
 
-                List<T> ObjList = new List<T>();
+                var objList = new List<T>();
 
-                Type objType = typeof(T);
+                var objType = typeof(T);
 
-                List<string> names = new List<string>(dataRead.FieldCount);
+                var names = new List<string>(dataRead.FieldCount);
 
-                for (int i = 0; i < dataRead.FieldCount; i++)
-                {
+                for (var i = 0; i < dataRead.FieldCount; i++)
                     names.Add(dataRead.GetName(i));
-                }
 
-                Dictionary<string, System.Reflection.PropertyInfo> tmpdiy = TypeOfCacheManager.GetInstance().GetTypeProperty(objType);
+                var tmpdiy = TypeOfCacheManager.GetInstance().GetTypeProperty(objType);
 
 
                 while (dataRead.Read())
                 {
-                    T temp = new T();
+                    var temp = new T();
 
                     foreach (var fieldname in names)
                     {
-                        System.Reflection.PropertyInfo prope;
+                        PropertyInfo prope;
                         if (tmpdiy.TryGetValue(fieldname, out prope))
                         {
                             var data = dataRead[fieldname];
 
                             if (!(data is DBNull))
-                            {
                                 prope.SetValue(temp, data, null);
-
-                            }
-
                         }
                     }
 
-                    ObjList.Add(temp);
-
+                    objList.Add(temp);
                 }
 
                 dataRead.Close();
 
-                return ObjList;
+                return objList;
 
 #endif
-
             }
-
-          
         }
     }
 }

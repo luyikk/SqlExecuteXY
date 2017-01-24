@@ -221,7 +221,7 @@ namespace SqlXY
         /// <param name="commandBehavior"></param>
         /// <returns></returns>
         public OdbcDataReader SqlExecuteReader(string sql,
-            CommandBehavior commandBehavior = CommandBehavior.SingleResult)
+            CommandBehavior commandBehavior = CommandBehavior.Default)
         {
             return SqlExecuteReader(sql, commandBehavior, null);
         }
@@ -234,7 +234,7 @@ namespace SqlXY
         /// <param name="commandBehavior"></param>
         /// <returns></returns>
         public OdbcDataReader SqlExecuteReader(string sql, bool bolIsProcedure,
-            CommandBehavior commandBehavior = CommandBehavior.SingleResult)
+            CommandBehavior commandBehavior = CommandBehavior.Default)
         {
             return SqlExecuteReader(sql, bolIsProcedure, commandBehavior, null);
         }
